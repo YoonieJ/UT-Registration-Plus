@@ -16,7 +16,14 @@ import ProhibitFillIcon from '~icons/ph/prohibit-fill';
 import { Button } from '../common/Button';
 import CourseCellColorPicker from './CalendarCourseCellColorPicker/CourseCellColorPicker';
 
-const UNAVAILABLE_COLORS = { primaryColor: '#BFC5C9', secondaryColor: '#6B7280' } as const;
+const STATUS_LABELS: Partial<Record<StatusType, string>> = {
+    [Status.CLOSED]: 'FULL',
+    [Status.WAITLISTED]: 'WAITLIST',
+    [Status.CANCELLED]: 'CANCELLED',
+};
+
+// Diagonal stripes layered over the course color so the class stays recognizable but reads as unavailable.
+const UNAVAILABLE_STRIPES = 'repeating-linear-gradient(135deg, rgba(255,255,255,0.4) 0 6px, transparent 6px 12px)';
 
 /**
  * Props for the CalendarCourseCell component.
@@ -53,11 +60,10 @@ export default function CalendarCourseCell({
     const { selectedColor, setSelectedCourse, handleCloseColorPicker, isSelectedBlock, isSelectedCourse } =
         useColorPickerContext();
 
-    const { uniqueId: courseID } = blockData.course;
-    // Unavailable (full / waitlisted / cancelled) classes render as gray blocks so students can plan around them.
-    // Gated on the status-chips option; the icon still tells closed, waitlisted, and cancelled apart.
+    const { colors, uniqueId: courseID } = blockData.course;
+    // Unavailable (full / waitlisted / cancelled) classes are striped and labeled so students can plan around them.
+    // Gated on the status-chips option.
     const isUnavailable = enableCourseStatusChips && status !== Status.OPEN;
-    const colors = isUnavailable ? UNAVAILABLE_COLORS : blockData.course.colors;
     const { dayIndex, startIndex } = blockData.calendarGridPoint;
 
     let selectedCourse = false;
@@ -118,6 +124,7 @@ export default function CalendarCourseCell({
             )}
             style={{
                 backgroundColor: colors.primaryColor,
+                backgroundImage: isUnavailable ? UNAVAILABLE_STRIPES : undefined,
             }}
             onClick={onClick}
             aria-label={`${courseDeptAndInstr}${timeAndLocation ? `, ${timeAndLocation}` : ''}`}
@@ -142,12 +149,15 @@ export default function CalendarCourseCell({
             </div>
             {rightIcon && (
                 <div
-                    className='h-fit flex items-center justify-center justify-self-start rounded p-0.5 text-white screenshot:hidden'
+                    className='h-fit flex items-center justify-center gap-0.5 justify-self-start rounded p-0.5 text-white screenshot:hidden'
                     style={{
                         backgroundColor: colors.secondaryColor,
                     }}
                 >
                     {rightIcon}
+                    {STATUS_LABELS[status] && (
+                        <span className='pr-0.5 text-[10px] font-bold leading-none'>{STATUS_LABELS[status]}</span>
+                    )}
                 </div>
             )}
 
