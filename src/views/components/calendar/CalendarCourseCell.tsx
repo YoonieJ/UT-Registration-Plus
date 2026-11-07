@@ -16,6 +16,8 @@ import ProhibitFillIcon from '~icons/ph/prohibit-fill';
 import { Button } from '../common/Button';
 import CourseCellColorPicker from './CalendarCourseCellColorPicker/CourseCellColorPicker';
 
+const UNAVAILABLE_COLORS = { primaryColor: '#BFC5C9', secondaryColor: '#6B7280' } as const;
+
 /**
  * Props for the CalendarCourseCell component.
  */
@@ -51,7 +53,11 @@ export default function CalendarCourseCell({
     const { selectedColor, setSelectedCourse, handleCloseColorPicker, isSelectedBlock, isSelectedCourse } =
         useColorPickerContext();
 
-    const { colors, uniqueId: courseID } = blockData.course;
+    const { uniqueId: courseID } = blockData.course;
+    // Unavailable (full / waitlisted / cancelled) classes render as gray blocks so students can plan around them.
+    // Gated on the status-chips option; the icon still tells closed, waitlisted, and cancelled apart.
+    const isUnavailable = enableCourseStatusChips && status !== Status.OPEN;
+    const colors = isUnavailable ? UNAVAILABLE_COLORS : blockData.course.colors;
     const { dayIndex, startIndex } = blockData.calendarGridPoint;
 
     let selectedCourse = false;
@@ -123,6 +129,7 @@ export default function CalendarCourseCell({
                     className={clsx('leading-tight! truncate overflow-clip!', {
                         '-mb-0.2': timeAndLocation,
                         'text-wrap': !timeAndLocation,
+                        'line-through': isUnavailable && status === Status.CANCELLED,
                     })}
                 >
                     {courseDeptAndInstr}
